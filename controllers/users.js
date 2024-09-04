@@ -8,18 +8,19 @@ import ejs from "ejs";
 import path from "path";
 import { fileURLToPath } from 'url';
 import fs from "fs/promises";
-import { ObjectId } from "mongodb"; // Correct import for ObjectId
+import { ObjectId } from "mongodb";
 
 // Use this to get __dirname in ES module scope
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+//User Registration
 const registration = async (req, res) => {
     try {
         const register = req.body;
-        const checkIsEmailExist = await users.findOne({ email: register.email }); // Corrected to findOne
+        const checkIsEmailExist = await users.findOne({ email: register.email });
         if (checkIsEmailExist) {
-            return res.send({ status: 0, msg: "Email already exists" }); // Changed status to 0 to reflect an error state
+            return res.send({ status: 0, msg: "Email already exists" });
         }
         register.password = bcrypt.hashSync(register.password, 10);
         const registerData = await users.create(register);
@@ -36,7 +37,8 @@ const registration = async (req, res) => {
     }
 };
 
-const loginUser = async function (req, res) {
+//UserLogin
+const userLogin = async function (req, res) {
     const { email, password } = req.body
     try {
         const checkUserEmail = await users.findOne({ email })
@@ -49,7 +51,7 @@ const loginUser = async function (req, res) {
                     {
                         userId: checkUserEmail._id,
                         email: checkUserEmail.email,
-                        //role: checkUserEmail.role,
+                        role: checkUserEmail.role,
                     },
                     CONFIG.JWT_KEY,
                     { algorithm: "RS256", expiresIn: "1d" }
@@ -72,7 +74,6 @@ const loginUser = async function (req, res) {
                 msg: "User name or Password is Invalid",
             });
         });
-
     }
     catch (error) {
         console.log("Error in Login", error.message);
@@ -83,7 +84,7 @@ const loginUser = async function (req, res) {
     };
 }
 
-
+//verifyOtp
 const verifyOTP = async (req, res) => {
     try {
         const { userId, otp } = req.body;
@@ -93,7 +94,6 @@ const verifyOTP = async (req, res) => {
             _id: new ObjectId(userId),
             otp: otp,
         });
-
         if (otpVerification && otpVerification.otp === otp) {
             const currentTime = new Date();
 
@@ -101,28 +101,23 @@ const verifyOTP = async (req, res) => {
             if (currentTime >= otpVerification.otpExpiration) {
                 return res.send({ status: 0, msg: "OTP timeout" });
             }
-
             // Delete OTP and expiration time after verification
             const updateResult = await users.updateOne(
                 { _id: new ObjectId(userId) },
                 { $unset: { otp: "", otpExpiration: "" } }
             );
-
             if (updateResult.modifiedCount > 0) {
                 const emailTemplatePath = path.join(__dirname, "..", "views", "registrationSuccessfulVerifiedOtp.ejs");
                 const emailTemplate = await fs.readFile(emailTemplatePath, "utf8");
                 const emailContent = ejs.render(emailTemplate, { userId });
-
                 const mailOptions = {
                     from: CONFIG.SMTP_USER,
                     to: otpVerification.email,
                     subject: "OTP Verification",
                     html: emailContent,
                 };
-
                 // Send the email notification
                 await sendEmail(mailOptions);
-
                 // Send a success response
                 return res.send({
                     status: 1,
@@ -139,36 +134,30 @@ const verifyOTP = async (req, res) => {
     }
 };
 
-const forgotPasswordEmail = async (req, res) => {
+//forgort Password 
+const forgotPassword= async (req, res) => {
     try {
         const { email } = req.body;
         const user = await users.findOne({ email });
-
         if (!user) {
             return res.send({ status: 0, msg: "User not found" });
         }
-
         const otp = common.otpGenerate();
         const expirationTime = new Date(Date.now() + 10 * 60 * 1000);
-
         const forgotPassword = await users.findOneAndUpdate(
             { email },
             { otp, otpExpiration: expirationTime }
         );
-
         if (forgotPassword) {
             const templatePath = path.join(__dirname, "..", "views", "forgotPasswordEmail.ejs");
             const htmlContent = await ejs.renderFile(templatePath, { otp, expirationTime });
-
             const mailOptions = {
                 from: CONFIG.SMTP_USER,
                 to: email,
                 subject: "Reset Your Password",
                 html: htmlContent,
             };
-
             await sendEmail(mailOptions);
-
             return res.send({
                 status: 1,
                 message: "OTP sent to email successfully",
@@ -184,6 +173,7 @@ const forgotPasswordEmail = async (req, res) => {
     }
 };
 
+//Reset password
 const resetPassword = async (req, res) => {
     try {
         const { userId, oldPassword, newPassword, confirmNewPassword } = req.body;
@@ -191,103 +181,99 @@ const resetPassword = async (req, res) => {
         if (newPassword !== confirmNewPassword) {
             return res.status(400).send({ status: 0, msg: "New password and confirm password do not match" });
         }
-
         // Fetch user from the database by userId
-        const user = await users.findById(userId);
-
-        if (!user) {
+        const checkIsUserExist = await users.findById(userId);
+        if (!checkIsUserExist) {
             return res.status(404).send({ status: 0, msg: "User not found" });
         }
-
         // Check if the old password is correct
-        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        const isMatch = await bcrypt.compare(oldPassword, checkIsUserExist.password);
         if (!isMatch) {
             return res.status(401).send({ status: 0, msg: "Old password is incorrect" });
         }
-
         // Hash the new password
         const hashedPassword = await bcrypt.hash(newPassword, 10); // 10 is the salt rounds
-
         // Update user's password in the database
-        user.password = hashedPassword;
-        await user.save();
-
+        checkIsUserExist.password = hashedPassword;
+        await checkIsUserExist.save();
         return res.send({ status: 1, msg: "Password reset successfully" });
     } catch (error) {
         console.error("Error resetting password:", error);
-        return res.status(500).send({ status: 0, msg: error.message });
+        return res.send({ status: 0, msg: error.message });
     }
 };
 
-const getData = async (req, res) => {
+//get User Data
+const getUserData = async (req, res) => {
     try {
-        const registeredData = await users.find();
-        if (registeredData.length > 0) {
+        const getUserRegisteredData = await users.find();
+        if (getUserRegisteredData.length > 0) {
             return res.status(200).send({
                 status: 1,
                 message: "Data retrieved successfully",
-                data: registeredData,
+                data: getUserRegisteredData,
             });
         } else {
-            return res.status(404).send({ status: 0, message: "No data found" });
+            return res.send({ status: 0, message: [] });
         }
     } catch (error) {
         console.error("Error during data retrieval:", error);
-        return res.status(500).send({ status: 0, message: error.message });
+        return res.send({ status: 0, message: error.message });
     }
 };
 
-const getDataById = async (req, res) => {
+//get User Data By Id
+const getUserDataById = async (req, res) => {
     const getUserDataById = req.body
     try {
-        const getId = await users.findById(getUserDataById._id).select('-password -updatedAt -createdAt');
-        if (getId) {
-            return res.send({ status: 1, msg: "data fetch successfully", data: getId })
+        const getUserDataUsingId = await users.findById(getUserDataById._id).select('-password -updatedAt -createdAt');
+        if (getUserDataUsingId) {
+            return res.send({ status: 1, msg: "data fetch successfully", data: getUserDataUsingId })
         } else {
-            return res.send({ status: 0, msg: "no data found" })
+            return res.send({ status: 0, msg: [] })
         }
     } catch (error) {
         console.error("Error during data retrieval:", error);
-        return res.status(500).send({ status: 0, message: error.message });
+        return res.send({ status: 0, message: error.message });
     }
 }
 
-const updateDataById = async function(req,res){
+//update data of user
+const updateUserDataById = async function (req, res) {
     const { userId, ...updateData } = req.body;
     try {
         const updateUserData = await users.findByIdAndUpdate(
             userId,
             updateData,
-             {new: true},
-
+            { new: true },
         )
         if (
-			updateUserData.matchedCount !== 0 &&
-			updateUserData.modifiedCount !== 0
-		){
-        return res.send({
-            status: 1,
-            message: "data updated successfully",
-        });
-    } else {
-        return res.send({
-            status: 0,
-            message: "Facing issue in update data",
-        });
-    }
+            updateUserData.matchedCount !== 0 &&
+            updateUserData.modifiedCount !== 0
+        ) {
+            return res.send({
+                status: 1,
+                message: "data updated successfully",
+            });
+        } else {
+            return res.send({
+                status: 0,
+                message: "Facing issue in update data",
+            });
+        }
     } catch (error) {
         console.error("Error during data retrieval:", error);
-        return res.status(500).send({ status: 0, message: error.message });
+        return res.send({ status: 0, message: error.message });
     }
 }
 
 export {
-    getData,
+    getUserData,
     registration,
-    loginUser,
+    userLogin,
     verifyOTP,
-    forgotPasswordEmail,
-    getDataById,
+    forgotPassword,
+    getUserDataById,
     resetPassword,
-    updateDataById
+    updateUserDataById
 };
