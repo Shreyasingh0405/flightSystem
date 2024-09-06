@@ -1,11 +1,8 @@
 import mongoose from 'mongoose';
-// import airlines from './airlines.js';
-// import routesSchema from './routesSchema.js';
-import users from './users.js'
-
+const objectId = mongoose.Schema.Types.ObjectId
 const flightSchema = new mongoose.Schema({
     airline: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: objectId,
         ref: "airlines",
         required: true,
         trim: true
@@ -17,7 +14,7 @@ const flightSchema = new mongoose.Schema({
         trim: true
     },
     route: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: objectId,
         ref: "routes",
         required: true
     },
@@ -102,8 +99,8 @@ const flightSchema = new mongoose.Schema({
         }
       ],  
     createdBy:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref:users,
+        type: objectId,
+        ref:"users",
         required:true,
         trim:true
     }

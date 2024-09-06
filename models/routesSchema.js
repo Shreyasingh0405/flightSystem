@@ -1,5 +1,5 @@
-import mongoose from "mongoose"
-import users from "./users.js"
+import mongoose from 'mongoose';
+const objectId = mongoose.Schema.Types.ObjectId
 const routesSchema = new mongoose.Schema({
     originCity: {
         type: String,
@@ -21,8 +21,8 @@ const routesSchema = new mongoose.Schema({
         trim: true
     },
     createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: users,
+        type: objectId,
+        ref: "users",
         required: true
     }
 },
