@@ -41,7 +41,7 @@ const flightSchema = new mongoose.Schema({
             },
             flightStatus: {
                 type: String,
-                enum: ['On Time', 'Delayed', 'Cancelled'],
+                enum: ['On Time', 'Delayed', 'Cancelled','Landed'],
                 default: 'On Time'
             }
         }
@@ -103,6 +103,11 @@ const flightSchema = new mongoose.Schema({
         ref:"users",
         required:true,
         trim:true
+    },
+    status:{
+        type:Number,
+        enum:[0,1], // 0:active,1:deleted
+        default:0 
     }
 },
     { timestamps: true, versionKey: false });

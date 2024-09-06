@@ -17,7 +17,7 @@ const airlinesSchema = new mongoose.Schema({
     //     trim: true
     // },
     contactInfo: {
-        type: JSON,
+        type:Object,
         required: true,
         trim: true
     },

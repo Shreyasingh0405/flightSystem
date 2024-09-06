@@ -24,6 +24,11 @@ const routesSchema = new mongoose.Schema({
         type: objectId,
         ref: "users",
         required: true
+    },
+    status:{
+        type:Number,
+        enum:[0,1], // 0:active,1:deleted
+        default:0 
     }
 },
     { timestamps: true, versionKey: false })
