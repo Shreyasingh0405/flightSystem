@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 import CONFIG from "./config/config.js";
 import userRoutes from "./routes/users.js";
 import flightRoutes from "./routes/flightRoutes.js";
-import airlines from "./routes/airlines.js"
+import airlines from "./routes/airlines.js";
+import flights from "./routes/flights.js"
 
 const app = express()
 app.use(express.json())
@@ -18,6 +19,7 @@ mongoose
     userRoutes(app)
     flightRoutes(app)
     airlines(app)
+    flights(app)
     app.listen(CONFIG.PORT, () => {
         console.log(
             `Server is turned on ${CONFIG.NODE_ENV} mode on ` + `${CONFIG.PORT}`

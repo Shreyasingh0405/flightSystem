@@ -1,4 +1,4 @@
-import routesSchema from "../models/routesSchema.js";
+import routesSchema from "../models/flightRoutes.js";
 const routesInsertion = async function (req, res) {
 const routesDataInsertion = req.body
     try {

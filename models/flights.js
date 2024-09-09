@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-const objectId = mongoose.Schema.Types.ObjectId
+const objectId = mongoose.Schema.Types.ObjectId;
+
 const flightSchema = new mongoose.Schema({
     airline: {
         type: objectId,
@@ -18,18 +19,22 @@ const flightSchema = new mongoose.Schema({
         ref: "routes",
         required: true
     },
-    flightWay: { 
-        type: String, 
-        enum: ['One-way', 'Round-trip', 'Multi-city'], 
-        required: true 
-      },
-    
+    flightWay: {
+        type: String,
+        enum: ['One-way', 'Round-trip', 'Multi-city'],
+        required: true
+    },
     schedules: [
         {
             dayOfWeek: {
                 type: String,
                 enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
                 required: true
+            },
+            dates: {
+                type: Date,
+                required: true,
+                trim: true
             },
             departureTime: {
                 type: String,
@@ -41,10 +46,10 @@ const flightSchema = new mongoose.Schema({
             },
             flightStatus: {
                 type: String,
-                enum: ['On Time', 'Delayed', 'Cancelled','Landed'],
+                enum: ['On Time', 'Delayed', 'Cancelled', 'Landed'],
                 default: 'On Time'
             }
-        }
+        },
     ],
     aircraftType: {
         type: String,
@@ -66,48 +71,44 @@ const flightSchema = new mongoose.Schema({
                 type: Number,
                 required: true
             }
-        }
+        },
     ],
-    amenities: [ 
+    amenities: [
         {
-          type: { 
-            type: String, 
-            enum: ['WiFi', 'In-flight Entertainment', 'Meals', 'Extra Legroom', 'Power Outlets', 'Blankets', 'Priority Boarding'],
-            required: true 
-          },
-          menu: [ 
-            {
-              type: { 
+            type: {
                 type: String,
-                 enum: ['Veg', 'Non-Veg'], 
-                 required: true 
-                }, 
-              price: {
-                 type: Number,
-                  required: true 
-                }, 
-              quantityAvailable: {
-                 type: Number,
-                  required: true 
+                enum: ['WiFi', 'In-flight Entertainment', 'Meals', 'Extra Legroom', 'Power Outlets', 'Blankets', 'Priority Boarding'],
+            },
+            menu: [
+                {
+                    type: {
+                        type: String,
+                        enum: ['Veg', 'Non-Veg'],
+                    },
+                    price: {
+                        type: Number,
+                    },
+                    quantityAvailable: {
+                        type: Number,
+                    },
+                    quantityNeeded: {
+                        type: Number,
+                        default: 0
+                    }
                 },
-              quantityNeeded: { 
-                type: Number,
-                 default: 0 
-                } 
-            }
-          ]
-        }
-      ],  
-    createdBy:{
+            ]
+        },
+    ],
+    createdBy: {
         type: objectId,
-        ref:"users",
-        required:true,
-        trim:true
+        ref: "users",
+        required: true,
+        trim: true
     },
-    status:{
-        type:Number,
-        enum:[0,1], // 0:active,1:deleted
-        default:0 
+    status: {
+        type: Number,
+        enum: [0, 1], // 0:active,1:deleted
+        default: 0
     }
 },
     { timestamps: true, versionKey: false });

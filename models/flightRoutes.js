@@ -12,7 +12,7 @@ const routesSchema = new mongoose.Schema({
         trim: true
     },
     distance: {
-        type: Number,
+        type: String,
         trim: true
     },
     travelDuration: {
