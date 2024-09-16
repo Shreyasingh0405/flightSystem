@@ -72,7 +72,7 @@ const passwordResetValidation= [
 	},
 ];
 
-const updateUserDataValidation= [
+const userIdDataValidation= [
 	check("userId").isMongoId().notEmpty().withMessage("userId should be required "),
     (req, res, next) => {
 		const errors = validationResult(req).array();
@@ -88,5 +88,5 @@ export {
     forgotPasswordValidation,
     verifyOtpValidation,
     passwordResetValidation,
-    updateUserDataValidation 
+    userIdDataValidation 
 };

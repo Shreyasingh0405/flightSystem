@@ -1,5 +1,6 @@
 import flight from "../models/flights.js";
 import routes from "../models/flightRoutes.js"
+
 const flightInsertion = async function (req, res) {
     const flightDataInsertion = req.body
     try {
@@ -112,4 +113,47 @@ const searchFlightsAccordingToRequirement = async (req, res) => {
         return res.send({ status: 0, msg: error.message });
     }
 }
-export { flightInsertion, getFlightsDetails, getFlightsByFlightId, updateFlightsDetailsById, deleteFlights, searchFlightsAccordingToRequirement }
+
+const filterAndSortFlights = async (req, res) => {
+    try {
+      const { price, travelDuration, departureTime, classType, sortBy } = req.body;
+      const filter = {};
+      const sort = {};
+        if (classType) {
+        filter['classes.type'] = classType;
+      }
+        if (price && classType) {
+        filter['classes.price'] = { $lte: Number(price) };
+      }
+        if (departureTime) {
+        filter['schedules.departureTime'] = { $gte: departureTime };
+      }
+        if (travelDuration) {
+        const routeRecords = await routes.find({ travelDuration: { $lte: travelDuration } }).select('_id');
+        filter.route = { $in: routeRecords.map(route => route._id) };
+      }
+        const sortFields = {
+        price: 'classes.price',
+        departureTime: 'schedules.departureTime',
+        travelDuration: 'route.travelDuration'
+      };
+  
+      if (sortBy && sortFields[sortBy]) {
+        sort[sortFields[sortBy]] = 1; // 1 for ascending order
+      }
+  
+      // Find the flights based on filters and sort them
+      const flights = await flight.find(filter)
+        .populate('route', 'originCity destinationCity travelDuration') // Populate route details
+        .populate('airline')
+        .sort(sort);  // Sort based on the chosen criteria
+  
+      res.status(200).json(flights);
+    } catch (err) {
+      console.error('Error filtering and sorting flights:', err);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  };
+  
+
+export { flightInsertion, getFlightsDetails, getFlightsByFlightId, updateFlightsDetailsById, deleteFlights, searchFlightsAccordingToRequirement,filterAndSortFlights }

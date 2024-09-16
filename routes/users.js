@@ -18,7 +18,7 @@ export default async (app) => {
             loginUserValidation, 
             verifyOtpValidation, 
             forgotPasswordValidation, 
-            updateUserDataValidation, 
+            userIdDataValidation, 
             passwordResetValidation 
         } = await import("../validations/users.js");
 
@@ -29,8 +29,8 @@ export default async (app) => {
         app.post("/forgotPasswordEmail", forgotPasswordValidation, forgotPassword);
         app.post("/resetPassword", passwordResetValidation, resetPassword);
         app.get("/getRegisterData", getUserData);
-        app.post("/getDataById", getUserDataById);
-        app.post("/updateDataById", updateUserDataValidation, updateUserDataById);
+        app.post("/getDataById",userIdDataValidation, getUserDataById);
+        app.post("/updateDataById", userIdDataValidation, updateUserDataById);
 
     } catch (error) {
         console.log(error.message);

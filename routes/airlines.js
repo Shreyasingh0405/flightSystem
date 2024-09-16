@@ -8,13 +8,17 @@ export default async (app) => {
             updateAirlinesDetailsById, 
             deleteAirlines 
         } = await import("../controllers/airlines.js");
-
+        //==================validations=======================//
+        const{
+            airlineValidation,
+            airlineIdValidation 
+        }= await import("../validations/airline.js")
         //==================API Routes=========================//
-        app.post("/airlineInsertion", airlinesInsertion);
+        app.post("/airlineInsertion",airlineValidation, airlinesInsertion);
         app.get("/getAirlineDetails", getAirlineDetails);
-        app.post("/getAirlinesDetailsByairlinesId", getAirlinesDetailsByairlinesId);
-        app.post("/updateAirlinesDetailsById", updateAirlinesDetailsById);
-        app.post("/deleteAirlines", deleteAirlines);
+        app.post("/getAirlinesDetailsByairlinesId",airlineIdValidation,getAirlinesDetailsByairlinesId);
+        app.post("/updateAirlinesDetailsById",airlineIdValidation, updateAirlinesDetailsById);
+        app.post("/deleteAirlines",airlineIdValidation, deleteAirlines);
 
     } catch (error) {
         console.error("Error setting up airline routes:", error.message);
